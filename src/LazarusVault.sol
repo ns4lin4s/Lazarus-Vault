@@ -38,7 +38,22 @@ contract LazarusVault is ILazarusVault {
     }
 
     function execute() external override {
-        // Por implementar...
+        if (msg.sender != beneficiary) revert VaultErrors.NotBeneficiary(); 
+
+        uint256 timeRemaining = getRemainingTime();
+
+        if (timeRemaining > 0) revert VaultErrors.StillAlive(timeRemaining);
+
+        uint256 amount = address(this).balance;
+
+        if (amount == 0) revert VaultErrors.ExecutionFailed();
+
+        (bool success, ) = payable(beneficiary).call{value: amount}("");
+
+        if (!success) revert VaultErrors.ExecutionFailed();
+
+        emit VaultExecuted(beneficiary, amount);
+
     }
 
     receive() external payable {}
